@@ -1,13 +1,21 @@
 import re
 
-# with open('input.txt') as f:
-with open('example.txt') as f:
+with open('input.txt') as f:
+# with open('example.txt') as f:
     lines = f.readlines()
+
+# >>> use operators to determine beginning of each field!
+field_start_positions = []
+for idx, i in enumerate(lines[-1].strip()):
+    if i != " ":
+        field_start_positions.append(idx)
+field_start_positions.append(max([len(line) for line in lines]))
 
 def split_line(line):
     result = []
-    for i in range(0, len(line), 4):
-        result.append(line[i:i+3])
+    for i in range(len(field_start_positions)-1):
+        elem_value = line[field_start_positions[i]:field_start_positions[i+1]-1]
+        result.append(elem_value)
     return result
 
 table = []
@@ -20,35 +28,22 @@ for l in lines[:-1]:
 table.append(re.split(r'\s+', lines[-1].strip()))
 
 transposed = []
-for column_idx in range(len(table)):
-    column_buffer = []
-    for row_idx in range(len(table[0])):
+for column_idx in range(len(table[0])):
+    column_buffer = [] # holds a column of the original matrix
+    for row_idx in range(len(table)):
         column_buffer.append(table[row_idx][column_idx])
     transposed.append(column_buffer)
-
-print(transposed)
-
-# 123 328  51 64 
-#  45 64  387 23 
-#   6 98  215 314
-# *   +   *   + 
-
-# The rightmost problem is 4 + 431 + 623 = 1058
-# The second problem from the right is 175 * 581 * 32 = 3253600
-# The third problem from the right is 8 + 248 + 369 = 625
-# Finally, the leftmost problem is 356 * 24 * 1 = 8544
-
 
 first_colum = transposed[0]
 op = first_colum[-1]
 
 # Create number for each 'internal' colum, e.g. 356
 def assemble_vertical_number(external_column, internal_column_idx):
+
     result = 0
-    i=internal_column_idx
     exponent = 0
     for row_idx, elem in enumerate(reversed(external_column)):
-        digit=elem[i]
+        digit=elem[internal_column_idx]
         value = int(digit) * eval(f"1e{exponent}")
         if int(digit) != 0:
             exponent += 1
@@ -65,7 +60,7 @@ for col in transposed:
     else:
         accu = 0
 
-    for idx in range(3):
+    for idx in range(len(col[0])):
         value = assemble_vertical_number(col[:-1], idx)
         accu = eval(f"accu {op} value")
 
